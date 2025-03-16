@@ -38,6 +38,10 @@ export default function ContactPage() {
   // Set isMounted to true after component mounts
   useEffect(() => {
     setIsMounted(true)
+    // Close active contact on mobile when scrolling
+    const handleScroll = () => setActiveContact(null)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   // Scroll-based animations - only use on client side
@@ -54,13 +58,14 @@ export default function ContactPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      // Simulate form submission
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
       setIsSubmitted(true)
       toast({
         title: 'Message sent!',
@@ -77,7 +82,15 @@ export default function ContactPage() {
       setTimeout(() => {
         setIsSubmitted(false)
       }, 3000)
-    }, 1500)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Floating contact bubbles data
@@ -101,16 +114,16 @@ export default function ContactPage() {
     {
       icon: Github,
       title: 'GitHub',
-      value: 'github.com/avijit',
-      href: 'https://github.com/avijit',
+      value: 'github.com/ashavijit',
+      href: 'https://github.com/ashavijit',
       color: 'from-primary/40 to-primary/20',
       iconColor: 'var(--primary)',
     },
     {
       icon: Linkedin,
       title: 'LinkedIn',
-      value: 'linkedin.com/in/avijit',
-      href: 'https://linkedin.com/in/avijit',
+      value: 'linkedin.com/in/avijit-sen-69a00b1b9',
+      href: 'https://linkedin.com/in/avijit-sen-69a00b1b9',
       color: 'from-primary/40 to-primary/20',
       iconColor: 'var(--primary)',
     },
@@ -145,7 +158,7 @@ export default function ContactPage() {
         <div className="max-w-6xl mx-auto">
           {/* Floating Contact Bubbles */}
           <motion.div
-            className="flex flex-wrap justify-center gap-4 mb-8"
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
@@ -153,7 +166,7 @@ export default function ContactPage() {
             {contactBubbles.map((bubble, index) => (
               <motion.div
                 key={index}
-                className="relative"
+                className="relative flex justify-center"
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{
@@ -162,13 +175,13 @@ export default function ContactPage() {
                   stiffness: 260,
                   damping: 20,
                 }}
-                whileHover={{ scale: 1.1, y: -5 }}
+                whileHover={{ scale: 1.05 }}
                 onHoverStart={() => setActiveContact(index)}
                 onHoverEnd={() => setActiveContact(null)}
               >
                 <a
                   href={bubble.href}
-                  className="block"
+                  className="block w-full"
                   target={bubble.href.startsWith('http') ? '_blank' : undefined}
                   rel={
                     bubble.href.startsWith('http')
@@ -177,18 +190,18 @@ export default function ContactPage() {
                   }
                 >
                   <div
-                    className={`w-16 h-16 rounded-full bg-gradient-to-br ${bubble.color} p-[1px] shadow-md hover:shadow-lg transition-all duration-300 will-change-transform`}
+                    className={`aspect-square rounded-2xl bg-gradient-to-br ${bubble.color} p-[1px] shadow-lg hover:shadow-xl transition-all duration-300`}
                   >
-                    <div className="w-full h-full rounded-full bg-background/95 backdrop-blur-md flex items-center justify-center relative overflow-hidden group">
+                    <div className="w-full h-full rounded-2xl bg-background/95 backdrop-blur-md flex flex-col items-center justify-center p-3 gap-2 relative overflow-hidden group">
                       {/* Shine effect */}
-                      <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000 ease-in-out"></div>
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000 ease-in-out" />
 
-                      {/* Icon container with gradient background */}
+                      {/* Icon */}
                       <div
-                        className={`p-3 rounded-full bg-gradient-to-br ${bubble.color} bg-opacity-10 transform transition-transform duration-300 group-hover:scale-110`}
+                        className={`p-3 rounded-xl bg-gradient-to-br ${bubble.color} bg-opacity-10 transform transition-transform duration-300 group-hover:scale-110`}
                       >
                         <bubble.icon
-                          className="h-5 w-5"
+                          className="h-6 w-6"
                           style={{
                             color: bubble.iconColor,
                             strokeWidth: 1.5,
@@ -196,14 +209,19 @@ export default function ContactPage() {
                         />
                       </div>
 
+                      {/* Title */}
+                      <span className="text-sm font-medium text-center font-space-grotesk">
+                        {bubble.title}
+                      </span>
+
                       {/* Subtle ring animation on hover */}
-                      <div className="absolute inset-0 rounded-full border border-transparent group-hover:border-primary/10 opacity-0 group-hover:opacity-30 scale-90 group-hover:scale-100 transition-all duration-300"></div>
+                      <div className="absolute inset-0 rounded-2xl border border-transparent group-hover:border-primary/10 opacity-0 group-hover:opacity-30 scale-90 group-hover:scale-100 transition-all duration-300" />
                     </div>
                   </div>
 
-                  {/* Expanded info on hover */}
+                  {/* Expanded info on hover - Only show on desktop */}
                   <motion.div
-                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-background/90 backdrop-blur-md rounded-lg p-3 shadow-xl border border-primary/20 w-48 z-10"
+                    className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-background/90 backdrop-blur-md rounded-lg p-3 shadow-xl border border-primary/20 w-48 z-10 hidden md:block"
                     initial={{ opacity: 0, scale: 0.8, y: -10 }}
                     animate={{
                       opacity: activeContact === index ? 1 : 0,
@@ -216,7 +234,7 @@ export default function ContactPage() {
                       <h3 className="font-medium font-space-grotesk text-lg mb-1">
                         {bubble.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground font-space-mono">
+                      <p className="text-sm text-muted-foreground font-space-mono break-all">
                         {bubble.value}
                       </p>
                     </div>
@@ -227,6 +245,7 @@ export default function ContactPage() {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Contact Info Card */}
             <motion.div
               className="lg:col-span-2 space-y-6"
               initial={{ opacity: 0, x: -20 }}
@@ -237,107 +256,54 @@ export default function ContactPage() {
               }
             >
               <Card className="border-none shadow-xl bg-gradient-to-br from-background to-primary/5 overflow-hidden">
-                <CardContent className="p-8">
-                  <h2 className="text-2xl font-bold font-space-grotesk mb-8 flex items-center gap-3">
+                <CardContent className="p-6 sm:p-8">
+                  <h2 className="text-2xl font-bold font-space-grotesk mb-6 sm:mb-8 flex items-center gap-3">
                     <Terminal className="h-6 w-6 text-primary" />
                     <span>Connect With Me</span>
                   </h2>
 
-                  <div className="space-y-8">
-                    {[
-                      {
-                        icon: Mail,
-                        title: 'Email',
-                        value: 'avijitsen24.me@gmail.com',
-                        href: 'mailto:avijitsen24.me@gmail.com',
-                      },
-                      {
-                        icon: Phone,
-                        title: 'Phone',
-                        value: '+91 8250325238',
-                        href: 'tel:+918250325238',
-                      },
-                      {
-                        icon: MapPin,
-                        title: 'Location',
-                        value: 'Noida, India',
-                      },
-                      {
-                        icon: Github,
-                        title: 'GitHub',
-                        value: 'github.com/avijit',
-                        href: 'https://github.com/avijit',
-                      },
-                      {
-                        icon: Linkedin,
-                        title: 'LinkedIn',
-                        value: 'linkedin.com/in/avijit',
-                        href: 'https://linkedin.com/in/avijit',
-                      },
-                    ].map((item, index) => (
-                      <motion.div
+                  <div className="space-y-6 sm:space-y-8">
+                    {contactBubbles.slice(0, 4).map((contact, index) => (
+                      <a
                         key={index}
-                        className="flex items-start gap-5 group"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ x: 5 }}
+                        href={contact.href}
+                        target={
+                          contact.href.startsWith('http') ? '_blank' : undefined
+                        }
+                        rel={
+                          contact.href.startsWith('http')
+                            ? 'noopener noreferrer'
+                            : undefined
+                        }
+                        className="flex items-center gap-4 p-4 rounded-lg hover:bg-primary/5 transition-colors group"
                       >
-                        <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                          <item.icon className="h-5 w-5" />
+                        <div
+                          className={`p-3 rounded-xl bg-gradient-to-br ${contact.color} transform transition-transform duration-300 group-hover:scale-110`}
+                        >
+                          <contact.icon
+                            className="h-5 w-5"
+                            style={{
+                              color: contact.iconColor,
+                              strokeWidth: 1.5,
+                            }}
+                          />
                         </div>
                         <div>
-                          <h3 className="font-medium font-space-grotesk text-lg mb-1">
-                            {item.title}
+                          <h3 className="font-medium font-space-grotesk">
+                            {contact.title}
                           </h3>
-                          {item.href ? (
-                            <a
-                              href={item.href}
-                              target={
-                                item.href.startsWith('http')
-                                  ? '_blank'
-                                  : undefined
-                              }
-                              rel={
-                                item.href.startsWith('http')
-                                  ? 'noopener noreferrer'
-                                  : undefined
-                              }
-                              className="text-muted-foreground hover:text-primary transition-colors font-space-mono"
-                            >
-                              {item.value}
-                            </a>
-                          ) : (
-                            <p className="text-muted-foreground font-space-mono">
-                              {item.value}
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground font-space-mono">
+                            {contact.value}
+                          </p>
                         </div>
-                      </motion.div>
+                      </a>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Card className="border-none shadow-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-primary to-primary/70 p-8 text-primary-foreground">
-                    <h3 className="text-xl font-bold font-space-grotesk mb-4">
-                      Available for Opportunities
-                    </h3>
-                    <p className="text-primary-foreground/90 font-inter">
-                      I'm always open to discussing new projects, creative
-                      ideas, or opportunities to be part of your vision.
-                    </p>
-                  </div>
-                </Card>
-              </motion.div>
             </motion.div>
 
+            {/* Contact Form */}
             <motion.div
               className="lg:col-span-3"
               initial={{ opacity: 0, x: 20 }}
@@ -346,169 +312,92 @@ export default function ContactPage() {
               style={
                 isMounted ? { opacity: formOpacity, scale: formScale } : {}
               }
-              id="contact-form"
             >
-              <Card className="border-none shadow-xl bg-gradient-to-br from-background to-primary/5 h-full">
-                <CardContent className="p-8">
-                  <h2 className="text-2xl font-bold font-space-grotesk mb-8 flex items-center gap-3">
-                    <Terminal className="h-6 w-6 text-primary" />
-                    <span className="typing-effect">Send Me a Message</span>
+              <Card
+                className="border-none shadow-xl bg-gradient-to-br from-background to-primary/5 overflow-hidden"
+                id="contact-form"
+              >
+                <CardContent className="p-6 sm:p-8">
+                  <h2 className="text-2xl font-bold font-space-grotesk mb-6 sm:mb-8 flex items-center gap-3">
+                    <MessageSquare className="h-6 w-6 text-primary" />
+                    <span>Send a Message</span>
                   </h2>
 
-                  {isSubmitted ? (
-                    <motion.div
-                      className="flex flex-col items-center justify-center py-16 text-center"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    >
-                      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                        <CheckCircle className="h-10 w-10 text-primary" />
-                      </div>
-                      <h3 className="text-2xl font-bold font-space-grotesk mb-3">
-                        Message Sent!
-                      </h3>
-                      <p className="text-muted-foreground max-w-md font-inter">
-                        Thank you for reaching out. I'll get back to you as soon
-                        as possible.
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                      {/* Terminal-style header */}
-                      <div className="bg-primary/10 rounded-lg p-3 font-space-mono text-sm mb-6 border-l-4 border-primary">
-                        <p className="text-primary">
-                          $ initiating_contact_sequence
-                        </p>
-                        <p className="text-muted-foreground">
-                          {'>'} Please enter your details below:
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label
-                            htmlFor="name"
-                            className="text-sm font-medium font-space-grotesk flex items-center gap-2"
-                          >
-                            <span className="text-primary">$</span> Your Name
-                          </label>
-                          <Input
-                            id="name"
-                            name="name"
-                            placeholder="John Doe"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            className="bg-background/50 border-primary/20 focus:border-primary h-12 font-space-mono"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label
-                            htmlFor="email"
-                            className="text-sm font-medium font-space-grotesk flex items-center gap-2"
-                          >
-                            <span className="text-primary">$</span> Your Email
-                          </label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="john@example.com"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                            className="bg-background/50 border-primary/20 focus:border-primary h-12 font-space-mono"
-                          />
-                        </div>
-                      </div>
-
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label
-                          htmlFor="subject"
-                          className="text-sm font-medium font-space-grotesk flex items-center gap-2"
-                        >
-                          <span className="text-primary">$</span> Subject
-                        </label>
                         <Input
-                          id="subject"
-                          name="subject"
-                          placeholder="How can I help you?"
-                          value={formData.subject}
+                          type="text"
+                          name="name"
+                          placeholder="Your Name"
+                          value={formData.name}
                           onChange={handleChange}
                           required
-                          className="bg-background/50 border-primary/20 focus:border-primary h-12 font-space-mono"
+                          className="bg-background/50"
                         />
                       </div>
-
                       <div className="space-y-2">
-                        <label
-                          htmlFor="message"
-                          className="text-sm font-medium font-space-grotesk flex items-center gap-2"
-                        >
-                          <span className="text-primary">$</span> Message
-                        </label>
-                        <Textarea
-                          id="message"
-                          name="message"
-                          placeholder="Your message here..."
-                          rows={8}
-                          value={formData.message}
+                        <Input
+                          type="email"
+                          name="email"
+                          placeholder="Your Email"
+                          value={formData.email}
                           onChange={handleChange}
                           required
-                          className="bg-background/50 border-primary/20 focus:border-primary resize-none font-space-mono"
+                          className="bg-background/50"
                         />
                       </div>
-
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Button
-                          type="submit"
-                          className="px-8 py-6 h-auto text-base font-space-grotesk w-full md:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin"></div>
-                              $ sending_message...
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Terminal className="h-4 w-4" />$ send_message
-                            </div>
-                          )}
-                        </Button>
-                      </motion.div>
-                    </form>
-                  )}
+                    </div>
+                    <div className="space-y-2">
+                      <Input
+                        type="text"
+                        name="subject"
+                        placeholder="Subject"
+                        value={formData.subject}
+                        onChange={handleChange}
+                        required
+                        className="bg-background/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Textarea
+                        name="message"
+                        placeholder="Your Message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        required
+                        className="min-h-[150px] bg-background/50 resize-y"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full sm:w-auto"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-current border-r-transparent rounded-full animate-spin" />
+                          Sending...
+                        </span>
+                      ) : isSubmitted ? (
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4" />
+                          Sent!
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Send className="h-4 w-4" />
+                          Send Message
+                        </span>
+                      )}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
         </div>
       </main>
-
-      {/* Add some CSS for the typing effect */}
-      <style jsx global>{`
-        .typing-effect {
-          border-right: 2px solid;
-          animation: cursor-blink 1.5s steps(2) infinite;
-        }
-
-        @keyframes cursor-blink {
-          0% {
-            border-color: transparent;
-          }
-          50% {
-            border-color: currentColor;
-          }
-        }
-
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-      `}</style>
     </div>
   )
 }
